@@ -348,7 +348,7 @@ async function main(): Promise<void> {
     await listen(
         provider,
         {
-            poolInterval: 10,
+            poolInterval: 20,
             address: [config.approveTokenAddress],
             topics: approvalTopics,
         },
