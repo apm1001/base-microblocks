@@ -1,5 +1,6 @@
 {
   "name": "new",
+  "type": "module",
   "packageManager": "yarn@4.6.0",
   "scripts": {
     "listen": "ts-node pulling-listener.ts",

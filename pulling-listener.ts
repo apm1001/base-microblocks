@@ -5,7 +5,8 @@
 import { request, Agent } from 'undici';
 import { Common } from '@ethereumjs/common';
 import { FeeMarketEIP1559Transaction } from '@ethereumjs/tx';
-import { AddressLike, bytesToHex } from '@ethereumjs/util';
+import type { AddressLike } from '@ethereumjs/util';
+import { bytesToHex } from '@ethereumjs/util';
 import { JsonRpcProvider, Log, Wallet, ethers } from 'ethers';
 import 'dotenv/config';
 
