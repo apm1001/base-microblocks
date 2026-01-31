@@ -1,0 +1,18 @@
+{
+  "name": "new",
+  "packageManager": "yarn@4.6.0",
+  "scripts": {
+    "listen": "ts-node pulling-listener.ts",
+    "trigger": "ts-node approve-trigger.ts"
+  },
+  "dependencies": {
+    "@ethereumjs/common": "^4.4.0",
+    "@ethereumjs/tx": "^5.4.0",
+    "@ethereumjs/util": "^9.1.0",
+    "dotenv": "^17.2.3",
+    "ethers": "^6.16.0",
+    "ts-node": "^10.9.2",
+    "undici": "^7.0.0",
+    "ws": "^8.19.0"
+  }
+}
