@@ -222,14 +222,18 @@ async function listen(
 
     while (true) {
         try {
+            const getLogsStartMs = Date.now();
             const logs: unknown[] = await provider.send('eth_getLogs', [{
                 fromBlock,
                 toBlock,
                 address,
                 topics,
             }]);
+            const getLogsMs = Date.now() - getLogsStartMs;
 
             if (Array.isArray(logs) && logs.length > 0) {
+                const logsReceivedMs = Date.now();
+                console.log(`[benchmark] eth_getLogs: ${getLogsMs}ms (${logs.length} log(s))`);
                 for (const log of logs as Record<string, unknown>[]) {
                     const key = log.transactionHash
                         ? `${log.transactionHash}:${log.logIndex}`
@@ -256,6 +260,7 @@ async function listen(
                                 ? parseInt(String(log.transactionIndex), 16)
                                 : 0,
                         };
+                        console.log(`[benchmark] before onLog: +${Date.now() - logsReceivedMs}ms since logs received`);
                         onLog(normalized as unknown as Log);
                     } catch (cbErr) {
                         console.error('onLog handler error:', cbErr);
@@ -354,7 +359,7 @@ async function main(): Promise<void> {
     await listen(
         provider,
         {
-            poolInterval: 20,
+            poolInterval: 50,
             address: [config.approveTokenAddress],
             topics: approvalTopics,
         },
