@@ -125,6 +125,7 @@ async function sendRawTxFast({
     agent,
 }: SendRawTxOptions): Promise<string> {
     const body = `{"jsonrpc":"2.0","id":${++rpcId},"method":"eth_sendRawTransaction","params":["${signedTx}"]}`;
+    const httpStartMs = Date.now();
     const { body: resBody, statusCode } = await request(sequencerUrl, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -132,6 +133,8 @@ async function sendRawTxFast({
         dispatcher: agent,
     });
     const text = await resBody.text();
+    const httpMs = Date.now() - httpStartMs;
+    console.log(`[benchmark] eth_sendRawTransaction HTTP: ${httpMs}ms`);
     if (statusCode < 200 || statusCode >= 300) {
         throw new Error(`HTTP ${statusCode}: ${text}`);
     }
@@ -304,7 +307,7 @@ async function main(): Promise<void> {
         txParamsState
     );
 
-    const sendPreparedTx = (): void => {
+    const sendPreparedTx = (triggerMs?: number): void => {
         if (!txParamsState.ready) {
             console.error('[Approval seen] Tx params not ready yet');
             return;
@@ -334,6 +337,9 @@ async function main(): Promise<void> {
             agent,
         })
             .then((txHash) => {
+                if (triggerMs !== undefined) {
+                    console.log(`[benchmark] trigger→submit: ${Date.now() - triggerMs}ms`);
+                }
                 console.log('[Approval seen] Sent tx:', txHash);
             })
             .catch((err) => {
@@ -353,8 +359,9 @@ async function main(): Promise<void> {
             topics: approvalTopics,
         },
         (log: Log) => {
+            const triggerMs = Date.now();
             // console.log('[Approve]', log.address, 'tx', log.transactionHash);
-            sendPreparedTx();
+            sendPreparedTx(triggerMs);
         }
     );
 }
