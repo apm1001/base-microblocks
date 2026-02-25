@@ -26,6 +26,7 @@ function encodeApprove(spender: string, amount: bigint): string {
     return iface.encodeFunctionData('approve', [spender, amount]);
 }
 const TX_PARAMS_UPDATE_MS = 200;
+const SEQUENCER_WARMUP_MS = 1_000;
 const DEFAULT_MAX_PRIORITY_FEE_PER_GAS = 10n ** 8n;
 
 /** Mutable state for nonce and gas; updated by background job */
@@ -275,6 +276,23 @@ async function listen(
     }
 }
 
+function startSequencerWarmup(sequencerUrl: string, agent: Agent): void {
+    const body = `{"jsonrpc":"2.0","id":0,"method":"eth_chainId","params":[]}`;
+    const ping = async (): Promise<void> => {
+        try {
+            const { body: resBody } = await request(sequencerUrl, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body,
+                dispatcher: agent,
+            });
+            await resBody.dump();
+        } catch (_) {}
+    };
+    void ping();
+    setInterval(() => void ping(), SEQUENCER_WARMUP_MS);
+}
+
 async function main(): Promise<void> {
     const sequencerUrl =
         process.env.SEQUENCER_URL ?? 'https://mainnet.base.org';
@@ -298,6 +316,7 @@ async function main(): Promise<void> {
 
     const wallet = new Wallet(senderPk, provider);
     const agent = new Agent({ keepAliveTimeout: 10_000 });
+    startSequencerWarmup(sequencerUrl, agent);
 
     const txParamsState: TxParamsState = {
         nonce: 0n,
@@ -359,7 +378,7 @@ async function main(): Promise<void> {
     await listen(
         provider,
         {
-            poolInterval: 50,
+            poolInterval: 20,
             address: [config.approveTokenAddress],
             topics: approvalTopics,
         },
